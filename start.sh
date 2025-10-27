@@ -147,7 +147,7 @@ while true; do
     fi
 
     ((count++))
-    sleep 1
+    sleep 2
 done
 
 requestBody='{

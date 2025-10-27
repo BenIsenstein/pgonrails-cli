@@ -14,17 +14,31 @@ Prefer to use Railway's web UI?
 - GitHub account
 - Railway account
 - Granted consent for Railway to use GitHub on your behalf
-- Railway API token in `.env` file (see `.env.example`)
+- Railway API token
 
 ## Quickstart
 
-Copy `.env.example` into a `.env` file. It will be gitignored.
+```sh
+bash <(curl -fsSL https://raw.githubusercontent.com/BenIsenstein/pgonrails-cli/main/start.sh)
+```
+
+Input your Railway API token when prompted.
+
+## Run locally
+
+```sh
+git clone https://github.com/BenIsenstein/pgonrails-cli
+```
+
+Copy `.env.example` into a `.env` file.
 
 Add your Railway API token to `RAILWAY_TOKEN`.
 
 Run `./start.sh`
 
-It will take about 5 minutes, and will print progress updates.
+## Working with your new self-hosted Supabase project
+
+It will take about 5 minutes to deploy and configure itself, and will print progress updates.
 
 Clone your new GitHub repo.
 
