@@ -4,8 +4,13 @@ set -euo pipefail
 if [ -f "./.env" ]; then
   source "./.env"
 else
-  echo "Error: .env file not found at .env"
-  exit 1
+    read -sp "Please input your Railway API token: " -r RAILWAY_TOKEN
+    echo
+
+    if [[ "$RAILWAY_TOKEN" == "" ]]; then
+        echo "Operation cancelled."
+        exit 1
+    fi
 fi
 
 echo "Generating JWT secret and tokens for Supabase auth..."
@@ -111,7 +116,7 @@ requestBody='{
 requestBody=$(echo "$requestBody" | jq --arg workflowId "$workflowId" '.variables.workflowId = $workflowId')
 
 echo "Creating project..."
-echo ""
+echo
 
 count=1
 while true; do
@@ -130,7 +135,7 @@ while true; do
     echo "-------------"
     echo "Status: $status"
     echo "Error: $error"
-    echo ""
+    echo
 
     if [ "$status" = "Complete" ]; then
         break
@@ -176,7 +181,7 @@ requestBody='{
 requestBody=$(echo "$requestBody" | jq --arg id "$siteServiceId" '.variables.id = $id')
 
 echo "Waiting for service deployments to become healthy..."
-echo ""
+echo
 
 count=1
 while true; do
@@ -193,7 +198,7 @@ while true; do
     echo "Poll for deployed services #$count..."
     echo "---------------------------------"
     echo "$status"
-    echo ""
+    echo
 
     if [[ -n "$status" && ( "$status" == "FAILED" || "$status" == "CRASHED" ) ]]; then
         echo "There has been a deployment error. Continuing..."
@@ -255,7 +260,7 @@ requestBody='{
 requestBody=$(echo "$requestBody" | jq --arg projectId "$projectId" '.variables.projectId = $projectId')
 
 echo "Fetching service instances for CI/CD config..."
-echo ""
+echo
 
 serviceInstancesResult=$(curl --silent -X POST https://backboard.railway.com/graphql/v2 \
     -H "Accept: */*" \
@@ -310,7 +315,7 @@ requestBody='{
 
 requestBody=$(echo "$requestBody" | jq --arg id "$siteServiceId" '.variables.id = $id')
 
-echo ""
+echo
 echo "Fetching new GitHub repo url..."
 
 newRepoResult=$(curl --silent -X POST https://backboard.railway.com/graphql/v2 \
@@ -323,13 +328,13 @@ newRepoResult=$(curl --silent -X POST https://backboard.railway.com/graphql/v2 \
 
 repo=$(echo "$newRepoResult" | jq -r '.data.service.serviceInstances.edges[0].node.source.repo')
 
-echo ""
+echo
 echo "New GitHub repo: "
 echo "https://github.com/$repo"
 
-echo ""
+echo
 echo "New Railway project: "
 echo "https://railway.com/project/$projectId"
 
-echo ""
+echo
 echo "Thank you for using PG On Rails CLI. Happy hacking!"
