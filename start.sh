@@ -1,4 +1,10 @@
 #!/bin/bash
+
+# Portions of this code are derived from Inder Singh's setup.sh shell script.
+# Copyright 2025 Inder Singh. Licensed under Apache License 2.0.
+# Original source: https://github.com/singh-inder/supabase-automated-self-host/blob/main/setup.sh
+#
+
 set -euo pipefail
 
 if [ -f "./.env" ]; then
