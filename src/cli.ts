@@ -8,6 +8,7 @@
 import { randomBytes } from "crypto";
 import { password } from "@inquirer/prompts";
 import { SignJWT } from "jose";
+import { version } from "../package.json";
 
 // ============================================
 // CONSTANTS
@@ -15,7 +16,7 @@ import { SignJWT } from "jose";
 
 const RAILWAY_API_URL = "https://backboard.railway.com/graphql/v2";
 const TEMPLATE_ID = "5e14ce66-9fb7-472e-ac44-15067d57cedc";
-const USER_AGENT = "create-pgonrails/1.0.0";
+const USER_AGENT = `create-pgonrails/${version}`;
 const UPSTREAM_URL = "https://github.com/BenIsenstein/pgonrails";
 const REPO_NAME = "pgonrails";
 const REPO_OWNER = "BenIsenstein";
@@ -136,7 +137,7 @@ interface CLIOptions {
 // UTILITY FUNCTIONS
 // ============================================
 
-function parseArgs(): CLIOptions {
+export function parseArgs(): CLIOptions {
   const args = process.argv.slice(2);
   return {
     dryRun: args.includes("--dry-run"),
@@ -237,11 +238,11 @@ async function graphqlRequest<T>(
 // CRYPTO / JWT
 // ============================================
 
-function generateJwtSecret(): string {
+export function generateJwtSecret(): string {
   return randomBytes(20).toString("hex");
 }
 
-async function generateToken(
+export async function generateToken(
   secret: string,
   payload: { role: string; iss: string },
   iat: number,
@@ -264,7 +265,7 @@ interface SupabaseTokens {
   serviceKey: string;
 }
 
-async function generateSupabaseTokens(): Promise<SupabaseTokens> {
+export async function generateSupabaseTokens(): Promise<SupabaseTokens> {
   const jwtSecret = generateJwtSecret();
   const iat = Math.floor(Date.now() / 1000);
   const exp = iat + 5 * 365 * 24 * 3600; // 5 years
@@ -325,7 +326,7 @@ async function fetchTemplateConfig(
   return data.template.serializedConfig;
 }
 
-function buildDeploymentPayload(
+export function buildDeploymentPayload(
   templateConfig: TemplateConfig,
   tokens: SupabaseTokens
 ): { query: string; variables: Record<string, unknown> } {
@@ -401,6 +402,7 @@ async function pollWorkflowStatus(
   }
 }`;
 
+  const MAX_POLLS = 150; // 5 minutes at 2s intervals
   let count = 1;
   while (true) {
     const data = await graphqlRequest<WorkflowStatusResponse>(
@@ -418,6 +420,10 @@ async function pollWorkflowStatus(
 
     if (error) {
       throw new Error(`Workflow error: ${error}`);
+    }
+
+    if (count >= MAX_POLLS) {
+      throw new Error("Project creation timed out after 5 minutes. Check the Railway dashboard for status.");
     }
 
     count++;
@@ -469,6 +475,7 @@ async function waitForServicesHealthy(
   }
 }`;
 
+  const MAX_POLLS = 30; // 15 minutes at 30s intervals
   let count = 1;
   while (true) {
     const data = await graphqlRequest<ServiceDeploymentResponse>(
@@ -488,6 +495,10 @@ async function waitForServicesHealthy(
 
     if (status === "FAILED" || status === "CRASHED") {
       throw new Error(`Deployment ${status.toLowerCase()}. Check Railway dashboard for details.`);
+    }
+
+    if (count >= MAX_POLLS) {
+      throw new Error("Service deployment timed out after 15 minutes. Check the Railway dashboard for status.");
     }
 
     count++;
